@@ -193,9 +193,9 @@ class MaxComputeAPI(ConnOdps):
     #     self.log.info(u'get_inscrement_data==> MIN_AND_MAX: %s' % MIN_AND_MAX)
 
 if __name__ == '__main__':
-    ACCESS_ID = 'LTAIhNwQk5AplazR'
-    ACCESS_KEY = 'kxvb9Hh1S7deJgyYRg79F0rvSf9vL5'
-    ODPS_PROJECT = 'sync_data'
+    ACCESS_ID = ''
+    ACCESS_KEY = ''
+    ODPS_PROJECT = ''
     od = MaxComputeAPI(ACCESS_ID, ACCESS_KEY, ODPS_PROJECT)
     od.check_data_consistency('dw_account_info', 'dm_account_subject_product', 'dim_institution')
 
