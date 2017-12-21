@@ -49,7 +49,7 @@ from urllib.parse import urlparse
 
 from sqlalchemy import (
     Column, Integer, String, DateTime, Text, Boolean, ForeignKey, PickleType,
-    Index, Float, LargeBinary)
+    Index, Float, LargeBinary, Date)
 from sqlalchemy import func, or_, and_
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.dialects.mysql import LONGTEXT
@@ -4812,3 +4812,54 @@ class ImportError(Base):
     timestamp = Column(DateTime)
     filename = Column(String(1024))
     stacktrace = Column(Text)
+
+
+class IncrementRecord(Base):
+    __tablename__ = "increment_record"
+    id = Column(Integer, primary_key=True)
+    table_name = Column(String(ID_LEN))
+    record_date = Column(Date)
+    numbers = Column(Integer)
+
+    @classmethod
+    @provide_session
+    def create(cls, session=None, **kwargs):
+        try:
+            record = IncrementRecord(**kwargs)
+            session.merge(record)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log = LoggingMixin().log
+            log.warning(u"Could not create IncrementRecord record")
+            log.exception(e)
+
+    @classmethod
+    @provide_session
+    def update(cls, record_id, session=None, **kwargs):
+        try:
+            record = session.query(IncrementRecord).filter_by(id=record_id).first()
+            for key, value in kwargs:
+                setattr(record, key, value)
+            session.merge(record)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log = LoggingMixin().log
+            log.warning(u"Could not update IncrementRecord record")
+            log.exception(e)
+
+    @classmethod
+    @provide_session
+    def delete(cls, record_id, session=None):
+        record = session.query(IncrementRecord).filter_by(id=record_id).first()
+        session.delete(record)
+        session.commit()
+
+    @classmethod
+    @provide_session
+    def find(cls, session=None, **kwargs):
+        return session.query(IncrementRecord).filter_by(**kwargs).first()
+
+
+
