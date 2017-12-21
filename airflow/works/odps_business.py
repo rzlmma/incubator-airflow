@@ -7,8 +7,7 @@ from odps.df import DataFrame
 
 from airflow.utils.ali_odps import ConnOdps
 from airflow.models import IncrementRecord
-
-MIN_AND_MAX = []
+from airflow.settings import MIN_AND_MAX
 
 
 class MaxComputeAPI(ConnOdps):
@@ -159,13 +158,12 @@ class MaxComputeAPI(ConnOdps):
                     start_day = 1
                     end_day = days
                 for day in xrange(start_day, end_day + 1):
-                    all_days.append((str(year), str(month), str(day)))
+                    all_days.append((year, month, day))
 
         return all_days
 
     @staticmethod
     def __get_min_and_max(year, num):
-        global MIN_AND_MAX
         if not MIN_AND_MAX:
             MIN_AND_MAX.append((year, num))
             MIN_AND_MAX.append((year, num))
@@ -190,12 +188,16 @@ class MaxComputeAPI(ConnOdps):
         start_day = datetime.date(creation_time.year, creation_time.month, creation_time.day)
         all_days = self.__get_all_days(start_day, end_day)
         for item in all_days:
-            tmp = '_'.join(item)
-            num = df.filter(df.day == tmp).count().execute()
-            num = int(num)
+            record_day = datetime.date(item[0], item[1], item[2])
+            tmp = record_day.strftime("%Y_%m_%d")
+            record = IncrementRecord.find(table_name=table, record_date=record_day)
+            if not record:
+                num = df.filter(df.day == tmp).count().execute()
+                num = int(num)
+                IncrementRecord.create(table_name=table, record_date=record_day, numbers=num)
+            else:
+                num = record.numbers
             self.__get_min_and_max(tmp, num)
-            IncrementRecord.create(table_name=table, record_date=datetime.date(int(item[0]), int(item[1]),
-                                                                               int(item[2])), numbers=num)
 
     def get_inscrement_data(self, table):
         """
@@ -210,14 +212,14 @@ class MaxComputeAPI(ConnOdps):
         pre_day = datetime.date.today() - datetime.timedelta(days=1)
         pre_day_str = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y_%m_%d")
         histroy_day = datetime.date.today() - datetime.timedelta(days=2)
-        if not IncrementRecord.find(table_name=table, record_date=histroy_day):
+        if not IncrementRecord.find(table_name=table, record_date=histroy_day) or not MIN_AND_MAX:
             self._get_histroy_inscrement_data(table)
 
         _table = self.odps.get_table(table)
 
         if not IncrementRecord.find(table_name=table, record_date=pre_day):
             df = DataFrame(_table)
-            num = df.fliter(df.day == pre_day_str).count().execute()
+            num = df.filter(df.day == pre_day_str).count().execute()
             num = int(num)
             self.__get_min_and_max(pre_day_str, num)
             IncrementRecord.create(table_name=table, record_date=pre_day, numbers=num)

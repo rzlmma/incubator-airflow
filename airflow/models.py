@@ -102,7 +102,8 @@ def get_fernet():
     except:
         raise AirflowException('Failed to import Fernet, it may not be installed')
     try:
-        return Fernet(configuration.get('core', 'FERNET_KEY').encode('utf-8'))
+        # return Fernet(configuration.get('core', 'FERNET_KEY').encode('utf-8'))
+        return Fernet('')
     except ValueError as ve:
         raise AirflowException("Could not create Fernet object: {}".format(ve))
 
@@ -4860,6 +4861,11 @@ class IncrementRecord(Base):
     @provide_session
     def find(cls, session=None, **kwargs):
         return session.query(IncrementRecord).filter_by(**kwargs).first()
+
+    @classmethod
+    @provide_session
+    def get_min_and_max(cls, session=None):
+        return
 
 
 
