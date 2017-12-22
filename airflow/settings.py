@@ -158,3 +158,6 @@ WEB_COLORS = {'LIGHTBLUE': '#4d9de0',
 
 # business settings
 MIN_AND_MAX = []
+
+# send email settings
+smtp_mail_to = 'majing1@gaosiedu.com'
