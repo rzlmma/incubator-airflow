@@ -44,13 +44,14 @@ def send_email(to, subject, html_content, files=None, dryrun=False, cc=None, bcc
     return backend(to, subject, html_content, files=files, dryrun=dryrun, cc=cc, bcc=bcc, mime_subtype=mime_subtype)
 
 
-def send_email_smtp(to, subject, html_content, files=None, dryrun=False, cc=None, bcc=None, mime_subtype='mixed'):
+def send_email_smtp(subject, html_content, files=None, dryrun=False, cc=None, bcc=None, mime_subtype='mixed'):
     """
     Send an email with html content
 
     >>> send_email('test@example.com', 'foo', '<b>Foo</b> bar', ['/dev/null'], dryrun=True)
     """
     SMTP_MAIL_FROM = configuration.get('smtp', 'SMTP_MAIL_FROM')
+    to = configuration.get('smtp', 'SMTP_MAIL_TO')
 
     to = get_email_address_list(to)
 
@@ -70,7 +71,7 @@ def send_email_smtp(to, subject, html_content, files=None, dryrun=False, cc=None
         recipients = recipients + bcc
 
     msg['Date'] = formatdate(localtime=True)
-    mime_text = MIMEText(html_content, 'html')
+    mime_text = MIMEText(html_content, 'html', _charset='utf-8')
     msg.attach(mime_text)
 
     for fname in files or []:

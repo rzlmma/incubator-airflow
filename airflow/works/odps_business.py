@@ -204,26 +204,29 @@ class MaxComputeAPI(ConnOdps):
         获取数据的增量
         :return:
         """
-        if not table:
-            raise ValueError(u'the param table is None')
-        if not self.odps.exist_table(table):
-            raise ValueError(u'table [%s] 不存在' % table)
+        try:
+            if not table:
+                raise ValueError(u'the param table is None')
+            if not self.odps.exist_table(table):
+                raise ValueError(u'table [%s] 不存在' % table)
 
-        pre_day = datetime.date.today() - datetime.timedelta(days=1)
-        pre_day_str = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y_%m_%d")
-        histroy_day = datetime.date.today() - datetime.timedelta(days=2)
-        if not IncrementRecord.find(table_name=table, record_date=histroy_day) or not MIN_AND_MAX:
-            self._get_histroy_inscrement_data(table)
+            pre_day = datetime.date.today() - datetime.timedelta(days=1)
+            pre_day_str = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y_%m_%d")
+            histroy_day = datetime.date.today() - datetime.timedelta(days=2)
+            if not IncrementRecord.find(table_name=table, record_date=histroy_day) or not MIN_AND_MAX:
+                self._get_histroy_inscrement_data(table)
 
-        _table = self.odps.get_table(table)
+            _table = self.odps.get_table(table)
 
-        if not IncrementRecord.find(table_name=table, record_date=pre_day):
-            df = DataFrame(_table)
-            num = df.filter(df.day == pre_day_str).count().execute()
-            num = int(num)
-            self.__get_min_and_max(pre_day_str, num)
-            IncrementRecord.create(table_name=table, record_date=pre_day, numbers=num)
-        return MIN_AND_MAX
+            if not IncrementRecord.find(table_name=table, record_date=pre_day):
+                df = DataFrame(_table)
+                num = df.filter(df.day == pre_day_str).count().execute()
+                num = int(num)
+                self.__get_min_and_max(pre_day_str, num)
+                IncrementRecord.create(table_name=table, record_date=pre_day, numbers=num)
+            return True, MIN_AND_MAX
+        except Exception as exc:
+            return False, exc.message
 
 
 if __name__ == '__main__':
