@@ -20,6 +20,7 @@ import subprocess
 import threading
 
 from airflow.utils.log.logging_mixin import LoggingMixin
+from airflow.settings import Session
 
 from airflow import configuration as conf
 from tempfile import mkstemp
@@ -96,6 +97,12 @@ class BaseTaskRunner(LoggingMixin):
             if len(line) == 0:
                 break
             self.log.info('Subtask: %s', line.rstrip('\n'))
+            if 'Done. Returned value was' in line and 'True' in line:
+                session = Session()
+                self._task_instance.is_success = True
+                session.merge(self._task_instance)
+                session.commit()
+                session.close()
 
     def run_command(self, run_with, join_args=False):
         """

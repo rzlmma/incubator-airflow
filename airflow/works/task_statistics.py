@@ -122,7 +122,7 @@ def gen_task_statistics(report_time):
         if duration > execute_time_max.duration:
             execute_time_max = task
 
-        if task.state == 'failed':
+        if not task.is_success:
             error_task_num += 1
             error_tasks.append(task)
 
@@ -133,7 +133,7 @@ def gen_task_statistics(report_time):
         execute_time_max_html = u''
 
     if error_tasks:
-        columns = ['dag_id', 'task_id']
+        columns = ['dag_id', 'task_id', 'execution_date', 'start_date']
         error_task_html = print_string_to_table(columns, error_tasks)
     else:
         error_task_html = u''
